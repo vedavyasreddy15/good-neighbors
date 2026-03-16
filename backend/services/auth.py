@@ -21,14 +21,10 @@
 import os
 from datetime import datetime, timedelta, timezone
 
+import bcrypt
 import jwt
-from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-
-# bcrypt is the gold standard for password hashing — deliberately slow to
-# make brute-force attacks impractical
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # HTTPBearer reads the "Authorization: Bearer <token>" header from requests
 bearer_scheme = HTTPBearer()
@@ -42,12 +38,12 @@ JWT_EXPIRE_HOURS = 72  # tokens last 3 days
 
 def hash_password(plain: str) -> str:
     """Turn a plain password into a bcrypt hash for safe storage."""
-    return pwd_context.hash(plain)
+    return bcrypt.hashpw(plain.encode(), bcrypt.gensalt()).decode()
 
 
 def verify_password(plain: str, hashed: str) -> bool:
     """Check if a plain password matches a stored hash. Returns True/False."""
-    return pwd_context.verify(plain, hashed)
+    return bcrypt.checkpw(plain.encode(), hashed.encode())
 
 
 # ─── JWT Tokens ───────────────────────────────────────────────────────────────

@@ -15,14 +15,14 @@
 
 import os
 import asyncio
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 
 load_dotenv()
 
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
-EMBEDDING_MODEL = "models/gemini-embedding-001"
+EMBEDDING_MODEL = "gemini-embedding-001"
 
 
 async def embed_text(text: str) -> list[float]:
@@ -34,9 +34,9 @@ async def embed_text(text: str) -> list[float]:
     loop = asyncio.get_event_loop()
     result = await loop.run_in_executor(
         None,
-        lambda: genai.embed_content(model=EMBEDDING_MODEL, content=text)
+        lambda: client.models.embed_content(model=EMBEDDING_MODEL, contents=text)
     )
-    return result["embedding"]
+    return result.embeddings[0].values
 
 
 async def embed_artist_profile(profile: dict) -> list[float]:
