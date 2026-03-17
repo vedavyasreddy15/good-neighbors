@@ -31,7 +31,7 @@ async def embed_text(text: str) -> list[float]:
     We run it in a thread pool because the Gemini SDK is synchronous
     (blocking), and we don't want it to freeze our async server.
     """
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     result = await loop.run_in_executor(
         None,
         lambda: client.models.embed_content(model=EMBEDDING_MODEL, contents=text)
