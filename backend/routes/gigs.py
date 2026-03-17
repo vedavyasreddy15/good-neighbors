@@ -2,15 +2,16 @@
 # Handles everything related to gigs.
 #
 # Endpoints:
-#   POST /api/gigs          — business posts a new gig
-#   GET  /api/gigs          — list all open gigs (with optional filters)
-#   GET  /api/gigs/mine     — business sees their own posted gigs
-#   GET  /api/gigs/{id}     — get a single gig's full detail
+# POST /api/gigs — business posts a new gig
+# GET /api/gigs — list all open gigs (with optional filters)
+# GET /api/gigs/mine — business sees their own posted gigs
+# GET /api/gigs/{id} — get a single gig's full detail
 #
 # Only businesses can post gigs — enforced by require_role("business").
 # Anyone can read gigs — no auth needed for browsing.
 # ──────────────────────────────────────────────────────────────────────────────
 
+import json
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from pydantic import BaseModel
@@ -123,11 +124,13 @@ async def _embed_gig(gig_id: str, body: GigCreate):
             "category": body.category,
             "location": body.location,
         })
+        embedding_str = json.dumps(embedding)
         pool = get_pool()
         async with pool.acquire() as conn:
             await conn.execute(
-                "UPDATE gigs SET embedding = $1 WHERE id = $2",
-                embedding, gig_id,
+                "UPDATE gigs SET embedding = $1::vector WHERE id = $2",
+                embedding_str, gig_id,
             )
+        print(f"Gig embedding saved for {gig_id}")
     except Exception as e:
         print(f"Gig embedding failed for {gig_id}: {e}")
