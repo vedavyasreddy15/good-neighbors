@@ -23,8 +23,8 @@ Good Neighbors is a hyperlocal creator marketplace for Philadelphia. Artists, mu
 | Backend | Python + FastAPI | Async, fast to ship, great ecosystem |
 | Database | PostgreSQL + pgvector | Reliable, free tier (Railway/Render), vector search built-in |
 | Auth | FastAPI + JWT + bcrypt | Clean, no third-party lock-in |
-| AI Matching | Google Gemini embeddings (`gemini-embedding-001`) | 1536-dim semantic vectors |
-| Deployment | Render (backend) + Vercel (frontend) | Free tiers, zero-config deploys |
+| AI Matching | Google Gemini embeddings (`gemini-embedding-001`) | 3072-dim semantic vectors |
+| Deployment | Railway (backend + postgres + frontend) | Zero-config deploys, auto-redeploy on push |
 
 ---
 
@@ -70,15 +70,30 @@ good-neighbors/
 ## Core Features (Beta)
 
 - [x] AI-powered gig matching (embeddings + pgvector)
-- [ ] User signup / login (JWT, no third-party auth)
-- [ ] Artist profile (bio, skills, category, location, gig count)
-- [ ] Business profile (name, description, industry)
-- [ ] Post a gig (title, category, pay, date, location)
-- [ ] Browse matched gigs (artist view)
-- [ ] Browse matched creators (business view)
-- [ ] One-click apply (no forms, profile speaks for itself)
-- [ ] View applicants + contact handoff
-- [ ] Deploy (Render + Vercel)
+- [x] User signup / login (JWT, no third-party auth)
+- [x] Artist profile (bio, skills, category, location, gig count)
+- [x] Business profile (name, description, industry)
+- [x] Post a gig (title, category, pay, date, location)
+- [x] Browse matched gigs (artist view)
+- [x] Browse matched creators (business view)
+- [x] One-click apply (no forms, profile speaks for itself)
+- [x] View applicants + contact handoff
+- [x] Deploy (Railway — backend + postgres + frontend)
+- [x] Dark / light mode toggle
+- [ ] Public profile view page (`/profile/:id`)
+
+## Beyond MVP — Roadmap
+
+- [ ] Public profile view page (`/profile/:id`)
+- [ ] In-app messaging between artists and businesses
+- [ ] Notifications (new match, new applicant, application accepted)
+- [ ] Artist portfolio / media uploads (images, links)
+- [ ] Business reviews / ratings for artists after a gig
+- [ ] Gig status flow (open → in review → filled → completed)
+- [ ] Artist gig count auto-increment on first completed gig
+- [ ] Search + filter gigs by category, location, pay
+- [ ] Admin dashboard (flag users, manage gigs)
+- [ ] Mobile-responsive polish + PWA support
 
 ---
 
