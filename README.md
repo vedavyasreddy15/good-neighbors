@@ -1,4 +1,5 @@
 # Good Neighbors
+https://amusing-joy-production-3473.up.railway.app/business
 
 > Connecting Philly creators with local businesses — matched by vibe, not keywords.
 
@@ -80,7 +81,7 @@ good-neighbors/
 - [x] View applicants + contact handoff
 - [x] Deploy (Railway — backend + postgres + frontend)
 - [x] Dark / light mode toggle
-- [ ] Public profile view page (`/profile/:id`)
+- [ ] Profile edit Option
 
 ## Beyond MVP — Roadmap
 
@@ -97,7 +98,7 @@ good-neighbors/
 
 ---
 ## Checklist Flaws
-- [ ] multi-selector when signing up
+- [x] multi-selector when signing up
 <img width="1664" height="852" alt="image" src="https://github.com/user-attachments/assets/efd1950a-dd84-456d-ac62-7b7dc7b329cb" />
 
 
