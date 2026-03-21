@@ -11,12 +11,13 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 
 export default function Navbar({ dark, setDark }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
@@ -124,11 +125,11 @@ export default function Navbar({ dark, setDark }) {
                 )}
               </div>
             </>
-          ) : (
+          ) : location.pathname !== '/login' ? (
             <Link to="/login" className="btn bg-green-600 hover:bg-green-700 text-white text-sm px-5 py-2">
               Sign In
             </Link>
-          )}
+          ) : null}
         </div>
       </div>
     </nav>
