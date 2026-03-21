@@ -154,7 +154,7 @@ export default function Navbar({ dark, setDark }) {
             <Link to="/login" className="btn bg-green-600 hover:bg-green-700 text-white text-sm px-5 py-2">
               Sign In
             </Link>
-          )}
+          ) : null}
         </div>
       </div>
     </nav>

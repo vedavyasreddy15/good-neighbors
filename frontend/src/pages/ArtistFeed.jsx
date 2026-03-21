@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 
 const CATEGORY_STYLE = {
@@ -39,12 +39,13 @@ export default function ArtistFeed() {
     })
       .then(res => {
         if (res.status === 409) {
-          if (retryCount.current < 5) {
+          if (retryCount.current < 10) {
             retryCount.current += 1
             setWarming(true)
-            setTimeout(() => loadGigs(true), 2000)
+            setTimeout(() => loadGigs(true), 3000)
           } else {
-            navigate('/setup', { replace: true })
+            setWarming(false)
+            setError('Your profile is still being processed. Check back in a minute.')
           }
           return null
         }
@@ -120,6 +121,11 @@ export default function ArtistFeed() {
                     {matchPct > 0 && <span className="text-green-600 dark:text-green-400 font-bold text-sm">{matchPct}% match</span>}
                   </div>
                   <h2 className="font-bold text-gray-900 dark:text-gray-100 text-base leading-snug mb-1">{gig.title}</h2>
+                  {gig.business_id && (
+                    <Link to={`/profile/business/${gig.business_id}`} className="text-xs text-green-600 dark:text-green-400 hover:underline mb-1 block">
+                      View Business Profile →
+                    </Link>
+                  )}
                   {gig.description && <p className="text-gray-500 dark:text-gray-400 text-xs mb-3 line-clamp-2">{gig.description}</p>}
                   {matchPct > 0 && (
                     <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 mb-4">
