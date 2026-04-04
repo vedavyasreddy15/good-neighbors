@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from db.connection import connect_db, disconnect_db, get_pool
-from routes import auth, profiles, gigs, applications, match
+from routes import auth, profiles, gigs, applications, match, notifications
 
 
 @asynccontextmanager
@@ -36,6 +36,22 @@ async def lifespan(app: FastAPI):
             await conn.execute("ALTER TABLE business_profiles ADD COLUMN IF NOT EXISTS portfolio_media TEXT[] DEFAULT '{}'")
         except Exception as e:
             print(f"Migration note for portfolio_media: {e}")
+            
+        try:
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS notifications (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+                    type TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    message TEXT NOT NULL,
+                    link TEXT,
+                    is_read BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+                )
+            """)
+        except Exception as e:
+            print(f"Migration note for notifications: {e}")
     yield
     await disconnect_db()
 
@@ -64,6 +80,7 @@ app.include_router(profiles.router, prefix="/api/profiles", tags=["Profiles"])
 app.include_router(gigs.router, prefix="/api/gigs", tags=["Gigs"])
 app.include_router(applications.router, prefix="/api/applications", tags=["Applications"])
 app.include_router(match.router, prefix="/api/match", tags=["Matching"])
+app.include_router(notifications.router, prefix="/api/notifications", tags=["Notifications"])
 
 uploads_dir = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(uploads_dir, exist_ok=True)

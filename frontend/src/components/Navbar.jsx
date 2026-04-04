@@ -14,6 +14,97 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 
+function NotificationBell({ user }) {
+  const [notifications, setNotifications] = useState([])
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef(null)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!user || !user.access_token) return
+    fetch('/api/notifications', {
+      headers: { Authorization: `Bearer ${user.access_token}` }
+    })
+      .then(res => res.json())
+      .then(data => setNotifications(data.notifications || []))
+      .catch(err => console.error("Failed to fetch notifications", err))
+  }, [user])
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const unreadCount = notifications.filter(n => !n.is_read).length
+
+  const handleToggle = async () => {
+    const willOpen = !isOpen
+    setIsOpen(willOpen)
+
+    // If opening the dropdown and there are unread notifications, mark them all as read!
+    if (willOpen && unreadCount > 0) {
+      // Optimistically clear the red dot instantly
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
+      
+      try {
+        await fetch('/api/notifications/read-all', {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${user.access_token}` }
+        })
+      } catch (err) {
+        console.error("Failed to mark all as read", err)
+      }
+    }
+  }
+
+  const handleNotificationClick = (n) => {
+    setIsOpen(false) // Close dropdown when clicked
+    if (n.link) {
+      navigate(n.link) // Redirect to the gig!
+    }
+  }
+
+  return (
+    <div className="relative flex items-center" ref={dropdownRef}>
+      <button onClick={handleToggle} className="relative flex items-center gap-1 p-2 text-gray-500 hover:text-green-600 transition-colors">
+        <div className="relative">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+          {/* The new small sleek red dot! */}
+          {unreadCount > 0 && <span className="absolute top-0 right-0 bg-red-500 rounded-full w-2.5 h-2.5 border-2 border-white dark:border-gray-900"></span>}
+        </div>
+        <span className="text-sm font-bold">Alerts</span>
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 top-10 mt-2 w-72 bg-white dark:bg-gray-800 shadow-xl border border-gray-100 dark:border-gray-700 rounded-lg overflow-hidden z-50">
+          <div className="p-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex justify-between items-center">
+            <h3 className="font-bold text-sm text-gray-700 dark:text-gray-300">Notifications</h3>
+          </div>
+          <div className="max-h-80 overflow-y-auto">
+            {notifications.length === 0 ? (
+              <div className="p-4 text-sm text-gray-500 dark:text-gray-400 text-center">No new notifications</div>
+            ) : (
+              notifications.map(n => (
+                <div key={n.id} onClick={() => handleNotificationClick(n)} className={`p-3 border-b border-gray-100 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${n.is_read ? 'opacity-60' : 'bg-green-50/50 dark:bg-green-900/10'}`}>
+                  <h4 className="font-bold text-sm text-gray-900 dark:text-white">{n.title}</h4>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{n.message}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Navbar({ dark, setDark }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -86,11 +177,7 @@ export default function Navbar({ dark, setDark }) {
           {user ? (
             <>
               {/* Role-based nav links */}
-              {user.role === 'artist' && (
-                <Link to="/artist" className="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">
-                  My Feed
-                </Link>
-              )}
+              {/* NOTE: "My Feed" link has been completely removed per your request! */}
               {user.role === 'business' && (
                 <>
                   <Link to="/business" className="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">
@@ -101,6 +188,9 @@ export default function Navbar({ dark, setDark }) {
                   </Link>
                 </>
               )}
+
+              {/* Notification Bell */}
+              <NotificationBell user={user} />
 
               {/* Profile Dropdown */}
               <div className="relative pl-2 border-l border-gray-200 dark:border-gray-700" ref={dropdownRef}>

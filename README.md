@@ -87,7 +87,7 @@ good-neighbors/
 
 - [ ] Public profile view page (`/profile/:id`)
 - [ ] In-app messaging between artists and businesses
-- [ ] Notifications (new match, new applicant, application accepted)
+- [x] Notifications (new match, new applicant, application accepted)
 - [ ] Artist portfolio / media uploads (images, links)
 - [ ] Business reviews / ratings for artists after a gig
 - [ ] Gig status flow (open → in review → filled → completed)

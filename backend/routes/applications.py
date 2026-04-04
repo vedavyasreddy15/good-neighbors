@@ -115,3 +115,44 @@ async def gig_applicants(
         )
 
     return {"applicants": [dict(r) for r in rows]}
+
+
+@router.patch("/{application_id}/approve")
+async def approve_application(
+    application_id: str,
+    current_user: dict = Depends(require_role("business")),
+):
+    """
+    Business approves an application.
+    Sends a notification to the artist.
+    """
+    pool = get_pool()
+
+    async with pool.acquire() as conn:
+        # Confirm this application belongs to a gig owned by this business
+        app_row = await conn.fetchrow(
+            """
+            SELECT a.artist_id, g.id AS gig_id, g.title, g.business_id
+            FROM applications a
+            JOIN gigs g ON g.id = a.gig_id
+            WHERE a.id = $1
+            """,
+            application_id
+        )
+        if not app_row or str(app_row["business_id"]) != current_user["user_id"]:
+            raise HTTPException(status_code=403, detail="Not authorized to approve this application.")
+        
+        await conn.execute("UPDATE applications SET status = 'approved' WHERE id = $1", application_id)
+        
+        # Notify the artist
+        await conn.execute(
+            """
+            INSERT INTO notifications (user_id, type, title, message, link)
+            VALUES ($1, 'application_approved', 'Application Approved!', $2, $3)
+            """,
+            app_row["artist_id"],
+            f"Your application for '{app_row['title']}' has been approved!",
+            f"/artist" 
+        )
+
+    return {"message": "Application approved successfully."}
