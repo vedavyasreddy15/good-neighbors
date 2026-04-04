@@ -177,6 +177,31 @@ async def _embed_gig(gig_id: str, body: GigCreate):
                 "UPDATE gigs SET embedding = $1::vector WHERE id = $2",
                 embedding_str, gig_id,
             )
-        print(f"Gig embedding saved for {gig_id}")
+            
+            # Fetch business name to make the notification sound more personal
+            biz_row = await conn.fetchrow(
+                "SELECT bp.business_name FROM gigs g JOIN business_profiles bp ON g.business_id = bp.user_id WHERE g.id = $1",
+                gig_id
+            )
+            biz_name = biz_row["business_name"] if biz_row else "A local business"
+
+            # Find matching artists (>60% match) and create notifications
+            # match_artists function returns match_score as (1 - cosine_distance)
+            artists = await conn.fetch(
+                "SELECT user_id, match_score FROM match_artists($1::vector, 50) WHERE match_score > 0.6",
+                embedding_str
+            )
+            
+            for artist in artists:
+                await conn.execute(
+                    """
+                    INSERT INTO notifications (user_id, type, title, message, link)
+                    VALUES ($1, 'new_gig_match', 'New Gig Match!', $2, $3)
+                    """,
+                    artist["user_id"],
+                    f"{biz_name} is looking for {body.category} creators, and you might be the perfect person for that gig! ({int(artist['match_score'] * 100)}% match)",
+                    f"/gig/{gig_id}"
+                )
+        print(f"Gig embedding saved for {gig_id}, notified {len(artists)} artists")
     except Exception as e:
         print(f"Gig embedding failed for {gig_id}: {e}")
